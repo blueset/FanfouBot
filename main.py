@@ -32,7 +32,8 @@ def start(bot, update):
                     "来自<a href=\"http://fanfou.com/blueset\">蓝色之风.py3</a>。\n\n"
                     "发送 /login 以登陆。发送 /logout 以退出。\n"
                     "直接发送消息即可发饭。"
-                    "意见与反馈请<a href=\"https://github.com/blueset/FanfouBot/issues\">戳此</a>。\n\n"
+                    "意见与反馈请<a href=\"https://github.com/blueset/FanfouBot/issues\">戳此</a>。\n"
+                    "友情联动：<a href=\"https://t.me/joinchat/AAAAAAbHdr-JkfRdeHI5Yw\">饭友 Telegram 交流群</a>\n\n"
                     "<i>Icon by shashank singh from the Noun Project.</i>",
                     parse_mode="HTML")
 
