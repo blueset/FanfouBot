@@ -3,10 +3,12 @@ import ProxyAgent from "simple-proxy-agent";
 import { TelegrafOptions } from 'telegraf/typings/telegraf';
 import { TelegrafContext } from 'telegraf/typings/context';
 import { MongoClient } from "mongodb";
-import got, { UploadError } from "got";
+import got from "got";
 import { TelegrafMongoSession } from "telegraf-session-mongodb";
 import { StorageDoc } from './dbModel';
-import Fanfou from "fanfou-sdk";
+import Fanfou, { ParsedData } from "fanfou-sdk";
+import queryString from "query-string";
+import FormData from "form-data";
 
 const PROXY =
     process.env.http_proxy ||
@@ -26,6 +28,37 @@ if (PROXY) {
         }
     });
 }
+
+async function post<T extends string>(uri: T, parameters: Object): Promise<ParsedData<T>> {
+    const url = `${this.apiEndPoint}${uri}.json`;
+    const oAuthUrl = `http://api.fanfou.com${uri}.json`;
+    const token = { key: this.oauthToken, secret: this.oauthTokenSecret };
+    const isUpload = ['/photos/upload', '/account/update_profile_image'].includes(uri);
+    const { Authorization } = this.o.toHeader(this.o.authorize({ url: oAuthUrl, method: 'POST', data: isUpload ? null : parameters }, token));
+    let form = null;
+    const headers = { Authorization, 'Content-Type': 'application/x-www-form-urlencoded' };
+    if (isUpload) {
+        form = new FormData();
+        Object.keys(parameters).forEach(key => {
+            form.append(key, parameters[key]);
+        });
+        delete headers['Content-Type'];
+    }
+
+    try {
+        const { body } = await got.post(url, {
+            headers,
+            body: isUpload ? form : queryString.stringify(parameters)
+        });
+        const response = JSON.parse(body);
+        // @ts-ignore
+        const result: ParsedData<T> = Fanfou._parseData(response, Fanfou._uriType(uri));
+        return result;
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+Fanfou.prototype.post = post;
 
 const client: MongoClient = new MongoClient(process.env.MONGO_URL, {
     useNewUrlParser: true,
@@ -207,7 +240,7 @@ bot.on("text", authorize, requireAuth, async (context) => {
             consumerKey: process.env.CLIENT_KEY,
             consumerSecret: process.env.CLIENT_SECRET,
             oauthToken: req.oauth_token,
-            oauthTokenSecret: req.oauth_token_secret
+            oauthTokenSecret: req.oauth_token_secret,
         });
         const res = await ff.post("/statuses/update", {
             status: text
@@ -228,12 +261,16 @@ bot.on("text", authorize, requireAuth, async (context) => {
 
 
 bot.on("photo", requireAuth, async (context) => {
+    const start = process.hrtime();
     try {
         const req = context.state.user?.req;
         let text = context.message?.caption || "发送了图片。";
         if (text.length > 140) {
             text = await pastebin(text);
         }
+
+        let stop = process.hrtime(start);
+        console.log(`text: ${stop[0]}s, ${stop[1] / 1000000}ms.`);
 
         const photos = context.message.photo;
         const photo = photos[photos.length - 1];
@@ -242,21 +279,33 @@ bot.on("photo", requireAuth, async (context) => {
         // @ts-ignore
         photoBuffer.name = "image.jpg";
 
+        stop = process.hrtime(start);
+        console.log(`download photo: ${stop[0]}s, ${stop[1] / 1000000}ms.`);
+
         const ff = new Fanfou({
             consumerKey: process.env.CLIENT_KEY,
             consumerSecret: process.env.CLIENT_SECRET,
             oauthToken: req.oauth_token,
             oauthTokenSecret: req.oauth_token_secret,
+            apiDomain: "cors.fanfou.pro",
         });
         const res = await ff.post("/photos/upload", {
             status: text,
             photo: photoBuffer,
         });
+
+        stop = process.hrtime(start);
+        console.log(`send photo: ${stop[0]}s, ${stop[1] / 1000000}ms.`);
+
         const response = `消息发送成功。\n\n${res.plain_text}\nhttps://fanfou.com/statuses/${res.id}`;
-        return await context.reply(
+        await context.reply(
             response,
             { reply_to_message_id: context.message.message_id }
         )
+
+        stop = process.hrtime(start);
+        console.log(`respond: ${stop[0]}s, ${stop[1] / 1000000}ms.`);
+        return;
     } catch (e) {
         console.error(e);
         return await context.reply(

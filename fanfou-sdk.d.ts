@@ -122,7 +122,7 @@ declare module "fanfou-sdk" {
     type ConversationListURLs = "/direct_messages/conversation_list";
     type DirectMessageURLs = "/direct_messages/new" | "/direct_messages/destroy";
 
-    type ParsedData<T> =
+    export type ParsedData<T> =
         T extends TimelineURLs ? Status[] :
         T extends UsersURLs ? User[] :
         T extends ConversationURLs ? DirectMessage[] :
@@ -140,8 +140,8 @@ declare module "fanfou-sdk" {
             oauthTokenSecret: string
         }): this;
         xauth(): this;
-        get<T extends string>(uri: T, params: object): ParsedData<T>;
-        post<T extends string>(uri: T, params: object): ParsedData<T>;
+        get<T extends string>(uri: T, params: object): Promise<ParsedData<T>>;
+        post<T extends string>(uri: T, params: object): Promise<arsedData<T>>;
         oauthEndPoint?: string;
         apiEndPoint?: string;
         consumerKey?: string;
