@@ -29,36 +29,36 @@ if (PROXY) {
     });
 }
 
-async function post<T extends string>(uri: T, parameters: Object): Promise<ParsedData<T>> {
-    const url = `${this.apiEndPoint}${uri}.json`;
-    const oAuthUrl = `http://api.fanfou.com${uri}.json`;
-    const token = { key: this.oauthToken, secret: this.oauthTokenSecret };
-    const isUpload = ['/photos/upload', '/account/update_profile_image'].includes(uri);
-    const { Authorization } = this.o.toHeader(this.o.authorize({ url: oAuthUrl, method: 'POST', data: isUpload ? null : parameters }, token));
-    let form = null;
-    const headers = { Authorization, 'Content-Type': 'application/x-www-form-urlencoded' };
-    if (isUpload) {
-        form = new FormData();
-        Object.keys(parameters).forEach(key => {
-            form.append(key, parameters[key]);
-        });
-        delete headers['Content-Type'];
-    }
+// async function post<T extends string>(uri: T, parameters: Object): Promise<ParsedData<T>> {
+//     const url = `${this.apiEndPoint}${uri}.json`;
+//     const oAuthUrl = `http://api.fanfou.com${uri}.json`;
+//     const token = { key: this.oauthToken, secret: this.oauthTokenSecret };
+//     const isUpload = ['/photos/upload', '/account/update_profile_image'].includes(uri);
+//     const { Authorization } = this.o.toHeader(this.o.authorize({ url: oAuthUrl, method: 'POST', data: isUpload ? null : parameters }, token));
+//     let form = null;
+//     const headers = { Authorization, 'Content-Type': 'application/x-www-form-urlencoded' };
+//     if (isUpload) {
+//         form = new FormData();
+//         Object.keys(parameters).forEach(key => {
+//             form.append(key, parameters[key]);
+//         });
+//         delete headers['Content-Type'];
+//     }
 
-    try {
-        const { body } = await got.post(url, {
-            headers,
-            body: isUpload ? form : queryString.stringify(parameters)
-        });
-        const response = JSON.parse(body);
-        // @ts-ignore
-        const result: ParsedData<T> = Fanfou._parseData(response, Fanfou._uriType(uri));
-        return result;
-    } catch (error) {
-        throw new Error(error);
-    }
-}
-Fanfou.prototype.post = post;
+//     try {
+//         const { body } = await got.post(url, {
+//             headers,
+//             body: isUpload ? form : queryString.stringify(parameters)
+//         });
+//         const response = JSON.parse(body);
+//         // @ts-ignore
+//         const result: ParsedData<T> = Fanfou._parseData(response, Fanfou._uriType(uri));
+//         return result;
+//     } catch (error) {
+//         throw new Error(error);
+//     }
+// }
+// Fanfou.prototype.post = post;
 
 const client: MongoClient = new MongoClient(process.env.MONGO_URL, {
     useNewUrlParser: true,
@@ -287,7 +287,7 @@ bot.on("photo", requireAuth, async (context) => {
             consumerSecret: process.env.CLIENT_SECRET,
             oauthToken: req.oauth_token,
             oauthTokenSecret: req.oauth_token_secret,
-            apiDomain: "cors.fanfou.pro",
+            // apiDomain: "cors.fanfou.pro",
         });
         const res = await ff.post("/photos/upload", {
             status: text,
