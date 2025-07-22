@@ -11,7 +11,7 @@
     "@iconify/icons-logos": "^1.2.14",
     "@iconify/react": "^3.2.2",
     "fanfou-sdk": "^4.1.0",
-    "form-data": "^3.0.0",
+    "form-data": "^3.0.4",
     "got": "^11.8.5",
     "lodash": "^4.17.21",
     "mongodb": "^3.6.10",
