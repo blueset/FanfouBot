@@ -13,7 +13,7 @@
     "fanfou-sdk": "^4.1.0",
     "form-data": "^3.0.4",
     "got": "^11.8.5",
-    "lodash": "^4.17.23",
+    "lodash": "^4.18.1",
     "mongodb": "^3.6.10",
     "next": "^16.1.7",
     "query-string": "^6.13.1",
